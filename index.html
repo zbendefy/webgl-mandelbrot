@@ -50,7 +50,7 @@
 
 			uniform float time;
 			uniform float zoom;
-			uniform float insightsize;
+			uniform float u_insightsize;
 			uniform vec2 resolution;
 			uniform vec2 mousePos;
 			uniform vec2 offset;
@@ -118,15 +118,15 @@
                     else
                         gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
 
-					if ( abs(mousePos.x-position.x) < 0.5 && abs(mousePos.y-position.y) < 0.5 )
+					float discdist = length(mousePos-position);
+					if ( discdist < 0.5 )
 					{
-						float insightsize=insightsize*zoom;
+						float insightsize=u_insightsize*zoom;
 
-						float dist = length(mousePos-position);
-						float lerpFactor = (dist*dist)/(0.5*0.5);
+						float lerpFactor = (discdist*discdist)/(0.5*0.5);
 
 						vec2 Zn=offset + vec2(position.x, position.y)*zoom;
-						vec2 centerpos = floor(Zn/insightsize)*insightsize;
+						vec2 centerpos = floor(Zn/insightsize)*insightsize + vec2(insightsize*0.5, insightsize*0.5);
 						vec2 samplepos = mod(Zn, insightsize);
 						float scale = GetJulia(samplepos/(insightsize*0.5)-1.0, 1.4, vec2(0.0,0.0), centerpos);
 						//vec4 color = vec4(samplepos.x*20.0-1.0,samplepos.y*20.0-1.0,0.0,1.0);
@@ -242,7 +242,7 @@
 				currentProgram = createProgram( vertex_shader, fragment_shader );
 				timeLocation = gl.getUniformLocation( currentProgram, 'time' );
 				resolutionLocation = gl.getUniformLocation( currentProgram, 'resolution' );
-				insightLocation = gl.getUniformLocation( currentProgram, 'insightsize' );
+				insightLocation = gl.getUniformLocation( currentProgram, 'u_insightsize' );
 				mouseLocation = gl.getUniformLocation( currentProgram, 'mousePos' );
 				zoomLocation = gl.getUniformLocation( currentProgram, 'zoom' );
 				offsetLocation = gl.getUniformLocation( currentProgram, 'offset' );
