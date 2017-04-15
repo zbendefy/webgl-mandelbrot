@@ -16,10 +16,10 @@
 			}
 			canvas {
 				width: 100%;
-                height: calc(100% - 65px);
-				height: -o-calc(100% - 65px); /* opera */
-                height: -webkit-calc(100% - 65px); /* google, safari */
-                height: -moz-calc(100% - 65px); /* firefox */
+                height: calc(100% - 40px);
+				height: -o-calc(100% - 40px); /* opera */
+                height: -webkit-calc(100% - 40px); /* google, safari */
+                height: -moz-calc(100% - 40px); /* firefox */
 			}
             #controls{
                 position: absolute;
@@ -27,9 +27,10 @@
 		</style> 
 	</head> 
 	<body> 
-		<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.wheelDelta<0?1.25:0.8), 10);" onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true" onmouseout="isDragging=false" onmouseup="isDragging=false" onmousemove="if(isDragging) {dragX+=-0.001*zoom*(event.clientX-lastClientX); dragY+=0.001*zoom*(event.clientY-lastClientY);} lastClientX=event.clientX; lastClientY=event.clientY;"></canvas>
+		<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.wheelDelta<0?1.25:0.8), 10);" onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true" onmouseout="isDragging=false" onmouseup="isDragging=false" 
+		onmousemove="mousePosX=event.clientX/parameters.screenWidth; mousePosY=event.clientY/parameters.screenHeight;  if(isDragging) {dragX+=-0.002*zoom*(event.clientX-lastClientX); dragY+=0.002*zoom*(event.clientY-lastClientY);} lastClientX=event.clientX; lastClientY=event.clientY;"></canvas>
         <div id="controls">
-            Iterations: <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input> Fractal: <select onchange="fractalMode=this.selectedIndex; juliaPosX=dragX; juliaPosY=dragY;"><option value="mandelbrot">Mandelbrot</option><option value="julia">Julia</option></select>
+            Iterations: <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input> Insight size: <input onchange="insightSize=0.01*this.value;" type="range" min="1" max="80" value="10" step="1" ></input>
         </div>
 		<div id="info"></div> 
  
@@ -49,6 +50,7 @@
 
 			uniform float time;
 			uniform float zoom;
+			uniform float insightsize;
 			uniform vec2 resolution;
 			uniform vec2 mousePos;
 			uniform vec2 offset;
@@ -106,24 +108,36 @@
                 position.x *= aspectRatio;
 
                 //gl_FragColor = vec4( position.x*0.5+0.5, position.y*0.5+0.5, 0.0, 1.0 ); return;
+				gl_FragColor = vec4(0.0,0.0,0.0,0.0);
 
-                int mbMinimap = (fractalMode == 1 && position.x > (MMAP_SIZE * aspectRatio) && position.y > MMAP_SIZE) ? 1 : 0;
-
-                if (mbMinimap==1)
-                {
-                    float scale = GetMandelbrot((position * vec2(20.0, 20.0) - vec2(18.0*aspectRatio, 18.0)), 0.5, vec2(0.0, 0.0));
-                    if ( scale == 0.0)
-                        gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
-                    else
-                        gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
-                }
-                else if ( fractalMode == 0 ) // mandelbrot
+                if ( fractalMode == 0 ) // mandelbrot
                 {
                     float scale = GetMandelbrot(position, zoom, offset);
                     if ( scale == 0.0)
                         gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 );
                     else
                         gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
+
+					if ( abs(mousePos.x-position.x) < 0.5 && abs(mousePos.y-position.y) < 0.5 )
+					{
+						float insightsize=insightsize*zoom;
+
+						float dist = length(mousePos-position);
+						float lerpFactor = (dist*dist)/(0.5*0.5);
+
+						vec2 Zn=offset + vec2(position.x, position.y)*zoom;
+						vec2 centerpos = floor(Zn/insightsize)*insightsize;
+						vec2 samplepos = mod(Zn, insightsize);
+						float scale = GetJulia(samplepos/(insightsize*0.5)-1.0, 1.4, vec2(0.0,0.0), centerpos);
+						//vec4 color = vec4(samplepos.x*20.0-1.0,samplepos.y*20.0-1.0,0.0,1.0);
+						vec4 color = vec4(1.0,0.0,0.0,1.0);
+						if ( scale == 0.0)
+							color = vec4( 0.0, 0.0, 0.0, 1.0 );
+						else
+							color = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
+
+						gl_FragColor = mix(color, gl_FragColor, clamp(lerpFactor,0.0,1.0));
+					}
                 }
                 else if ( fractalMode == 1) // julia
                 {
@@ -160,6 +174,7 @@
 			    currentProgram,
 			    vertex_position,
 			    timeLocation,
+				insightLocation,
 			    resolutionLocation,
 			    mouseLocation,
 			    zoomLocation,
@@ -194,8 +209,11 @@
                 lastClientY=0;
                 juliaPosX=0;
                 juliaPosY=0;
+                mousePosX=0;
+                mousePosY=0;
                 iterations=100;
                 fractalMode = 0;
+				insightSize=0.1;
 
 				canvas = document.querySelector( 'canvas' );
  
@@ -224,6 +242,7 @@
 				currentProgram = createProgram( vertex_shader, fragment_shader );
 				timeLocation = gl.getUniformLocation( currentProgram, 'time' );
 				resolutionLocation = gl.getUniformLocation( currentProgram, 'resolution' );
+				insightLocation = gl.getUniformLocation( currentProgram, 'insightsize' );
 				mouseLocation = gl.getUniformLocation( currentProgram, 'mousePos' );
 				zoomLocation = gl.getUniformLocation( currentProgram, 'zoom' );
 				offsetLocation = gl.getUniformLocation( currentProgram, 'offset' );
@@ -320,13 +339,14 @@
 				// Set values to program variables
  
 				gl.uniform1f( timeLocation, parameters.time / 1000 );
+				gl.uniform1f( insightLocation, insightSize );
 				gl.uniform2f( resolutionLocation, parameters.screenWidth, parameters.screenHeight );
 				gl.uniform1f( zoomLocation, zoom );
 				gl.uniform1i( iterationLocation, iterations );
                 gl.uniform2f( offsetLocation, dragX, dragY );
                 gl.uniform2f( juliaPosLocation, juliaPosX, juliaPosY );
                 gl.uniform1i( fractalModeLocation, fractalMode );
-                gl.uniform2f( mouseLocation, lastClientX, lastClientY );
+                gl.uniform2f( mouseLocation, (mousePosX * 2 - 1)*(parameters.screenWidth / parameters.screenHeight), mousePosY * -2 + 1 );
  
 				// Render geometry
  
