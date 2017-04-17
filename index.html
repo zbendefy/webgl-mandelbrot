@@ -27,10 +27,35 @@
 		</style> 
 	</head> 
 	<body> 
-		<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.wheelDelta<0?1.25:0.8), 10);" onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true" onmouseout="isDragging=false" onmouseup="isDragging=false" 
-		onmousemove="mousePosX=event.clientX/parameters.screenWidth; mousePosY=event.clientY/parameters.screenHeight;  if(isDragging) {dragX+=-0.002*zoom*(event.clientX-lastClientX); dragY+=0.002*zoom*(event.clientY-lastClientY);} lastClientX=event.clientX; lastClientY=event.clientY;"></canvas>
+		
+		<script>
+			function handleMouseEvent(tevent)
+			{
+				mousePosX=tevent.clientX/parameters.screenWidth;
+				mousePosY=tevent.clientY/parameters.screenHeight;
+
+				if(isDragging) {
+					dragX+=-0.002*zoom*(tevent.clientX-lastClientX);
+					dragY+=0.002*zoom*(tevent.clientY-lastClientY);
+				} 
+
+				lastClientX=tevent.clientX; 
+				lastClientY=tevent.clientY;
+			}
+		</script>
+
+		<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.wheelDelta<0?1.25:0.8), 10);"
+		onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true"
+		onmouseout="isDragging=false" 
+		onmouseup="isDragging=false" 
+		onmousemove="handleMouseEvent(event);"
+
+		ontouchstart="var tevent=event.touches[0]; lastClientX=tevent.clientX; lastClientY=tevent.clientY; isDragging=true" 
+		ontouchend="isDragging=false" 
+		ontouchmove="handleMouseEvent(event.touches[0]);"
+		></canvas>
         <div id="controls">
-            Iterations: <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input> Insight size: <input onchange="insightSize=0.01*this.value;" type="range" min="1" max="80" value="10" step="1" ></input>
+            Iterations: <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input> Insight size: <input onchange="insightSize=0.01*this.value; document.getElementById('insightdisplay').value= this.value == 0 ? 'Off' : this.value;" type="range" min="0" max="80" value="10" step="1" ></input><output id="insightdisplay">10</output>
         </div>
 		<div id="info"></div> 
  
@@ -119,7 +144,7 @@
                         gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
 
 					float discdist = length(mousePos-position);
-					if ( discdist < 0.5 )
+					if ( discdist < 0.5 && u_insightsize != 0.0 )
 					{
 						float insightsize=u_insightsize*zoom;
 
