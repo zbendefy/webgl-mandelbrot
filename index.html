@@ -55,7 +55,7 @@
 		ontouchmove="handleMouseEvent(event.touches[0]);"
 		></canvas>
         <div id="controls">
-            Iterations: <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input> Insight size: <input onchange="insightSize=0.01*this.value; document.getElementById('insightdisplay').value= this.value == 0 ? 'Off' : this.value;" type="range" min="0" max="80" value="10" step="1" ></input><output id="insightdisplay">10</output>
+            Iterations: <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input> Insight size: <input onchange="insightSize=0.01*this.value; document.getElementById('insightdisplay').value= this.value == 0 ? 'Off' : this.value;" type="range" min="0" max="80" value="5" step="1" ></input><output id="insightdisplay">5</output>
         </div>
 		<div id="info"></div> 
  
@@ -238,7 +238,7 @@
                 mousePosY=0;
                 iterations=100;
                 fractalMode = 0;
-				insightSize=0.1;
+				insightSize=0.05;
 
 				canvas = document.querySelector( 'canvas' );
  
