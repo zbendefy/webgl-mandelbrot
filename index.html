@@ -99,8 +99,8 @@
 			&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" oninput="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
 			&nbsp;&nbsp;|&nbsp;&nbsp; Insight size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
 			&nbsp;&nbsp;|&nbsp;&nbsp; <label><input type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
-			&nbsp;&nbsp;|&nbsp;&nbsp; Mouse position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
-			<span id="divFirstClick" >Click to show position!</span>
+			&nbsp;&nbsp;|&nbsp;&nbsp; Last position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
+			<span id="divFirstClick" >Click to set position!</span>
 		</span>
 		<div id="info"></div> 
  
@@ -116,8 +116,6 @@
  
 		<script id="fs" type="x-shader/fragment"> 
  
-            #define MMAP_SIZE 0.6
-
 			uniform float time;
 			uniform float zoom;
 			uniform float u_insightsize;
