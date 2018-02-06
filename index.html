@@ -25,14 +25,17 @@
                 position: absolute;
  				white-space: nowrap;
 				font-weight: bold;
-				font-size: 120%;
+				font-size: 112%;
             }
 			#divPos{
 				white-space: nowrap;
 			}
 			.mousepos{
-				font-size: 120%;
+				font-size: 103%;
 				color: #C4A77D;
+			}
+			#insightinput{
+				width: 200px;
 			}
 
 		</style> 
@@ -69,6 +72,16 @@
 				}
 				expectClick=false;
 			}
+
+			function onChangeInsight(self)
+			{
+				insightSize=0.01*self.value; 
+				document.getElementById('insightdisplay').value = self.value == 0 ? 'Off' : self.value;
+			}
+
+			function onChangeJuliamap(cb) {
+				discSize = cb.checked ? 100 : 0.5;
+			}
 		</script>
 
 		<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.wheelDelta<0?1.25:0.8), 10);"
@@ -83,9 +96,10 @@
 		ontouchmove="handleMouseEvent(event.touches[0]);"
 		></canvas>
         <span id="controls">
-			&nbsp;&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" onchange="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
-			&nbsp;&nbsp;|&nbsp;&nbsp; Insight size&nbsp; <input onchange="insightSize=0.01*this.value; document.getElementById('insightdisplay').value= this.value == 0 ? 'Off' : this.value;" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
-			&nbsp;&nbsp;|&nbsp;&nbsp; Mouse position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span> y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
+			&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" oninput="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
+			&nbsp;&nbsp;|&nbsp;&nbsp; Insight size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
+			&nbsp;&nbsp;|&nbsp;&nbsp; <label><input type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
+			&nbsp;&nbsp;|&nbsp;&nbsp; Mouse position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
 			<span id="divFirstClick" >Click to show position!</span>
 		</span>
 		<div id="info"></div> 
@@ -107,6 +121,7 @@
 			uniform float time;
 			uniform float zoom;
 			uniform float u_insightsize;
+			uniform float insightDiscSize;
 			uniform vec2 resolution;
 			uniform vec2 mousePos;
 			uniform vec2 offset;
@@ -175,11 +190,11 @@
                         gl_FragColor = vec4( 0.6, 0.8, 1.0, 0.0 ) * scale + vec4(0.0, 0.2, 0.4, 1.0);
 
 					float discdist = length(mousePos-position);
-					if ( discdist < 0.5 && u_insightsize != 0.0 )
+					if ( discdist < insightDiscSize && u_insightsize != 0.0 )
 					{
 						float insightsize=u_insightsize*zoom;
 
-						float lerpFactor = (discdist*discdist)/(0.5*0.5);
+						float lerpFactor = (discdist*discdist)/(insightDiscSize*insightDiscSize);
 
 						vec2 Zn=offset + vec2(position.x, position.y)*zoom;
 						vec2 centerpos = floor(Zn/insightsize)*insightsize + vec2(insightsize*0.5, insightsize*0.5);
@@ -231,6 +246,7 @@
 			    vertex_position,
 			    timeLocation,
 				insightLocation,
+				discSizeLocation,
 			    resolutionLocation,
 			    mouseLocation,
 			    zoomLocation,
@@ -270,6 +286,7 @@
                 iterations=100;
                 fractalMode = 0;
 				insightSize=0.05;
+				discSize=0.5;
 				expectClick=false;
 
 				canvas = document.querySelector( 'canvas' );
@@ -300,6 +317,7 @@
 				timeLocation = gl.getUniformLocation( currentProgram, 'time' );
 				resolutionLocation = gl.getUniformLocation( currentProgram, 'resolution' );
 				insightLocation = gl.getUniformLocation( currentProgram, 'u_insightsize' );
+				discSizeLocation = gl.getUniformLocation( currentProgram, 'insightDiscSize' );
 				mouseLocation = gl.getUniformLocation( currentProgram, 'mousePos' );
 				zoomLocation = gl.getUniformLocation( currentProgram, 'zoom' );
 				offsetLocation = gl.getUniformLocation( currentProgram, 'offset' );
@@ -397,6 +415,7 @@
  
 				gl.uniform1f( timeLocation, parameters.time / 1000 );
 				gl.uniform1f( insightLocation, insightSize );
+				gl.uniform1f( discSizeLocation, discSize );
 				gl.uniform2f( resolutionLocation, parameters.screenWidth, parameters.screenHeight );
 				gl.uniform1f( zoomLocation, zoom );
 				gl.uniform1i( iterationLocation, iterations );
