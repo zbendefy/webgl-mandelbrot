@@ -30,19 +30,12 @@
 			#insightinput{
 				width: 200px;
 			}
-			table, th, td {
-				border: 3px solid black;
-			}
-			table{
-				position: absolute; 
-				top: 0; 
-				left: 0; 
-				width: 100%;
-				height: 100%;
-			}
 			#glview {
 				width: 100%;
-				height: 100% !important;
+                height: calc(100% - 40px);
+				height: -o-calc(100% - 40px); /* opera */
+                height: -webkit-calc(100% - 40px); /* google, safari */
+                height: -moz-calc(100% - 40px); /* firefox */
 			}
 		</style> 
 	</head> 
@@ -72,7 +65,7 @@
 
 					var aspectRatio = parameters.screenWidth / parameters.screenHeight;
 					document.getElementById("divFractalPosX").innerHTML = dragX + (-1+2*(mousePosX)) * aspectRatio * zoom;
-					document.getElementById("divFractalPosY").innerHTML = dragY + (-1+2*(mousePosY)) * zoom;
+					document.getElementById("divFractalPosY").innerHTML = dragY + (-1+2*(1.0-mousePosY)) * zoom;
 					document.getElementById("divFirstClick").innerHTML = "";
 					document.getElementById("divPos").hidden = false;
 				}
@@ -90,35 +83,25 @@
 			}
 		</script>
 
-		<table >
-			<tr >
-				<td >
-					<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.deltaY<0?1.25:0.8), 10);"
-					onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true; expectClick=true;"
-					onmouseout="isDragging=false; " 
-					onmouseup="isDragging=false; handleMouseClick(event);" 
-					onmousemove="handleMouseEvent(event);"
-					onclick="handleMouseClick(event);"
-			
-					ontouchstart="var tevent=event.touches[0]; lastClientX=tevent.clientX; lastClientY=tevent.clientY; isDragging=true" 
-					ontouchend="isDragging=false" 
-					ontouchmove="handleMouseEvent(event.touches[0]);"
-					></canvas>
-				</td>
-			</tr>
-			<tr style="height: 40px">
-				<td>
-					<span id="controls">
-						&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" oninput="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
-						&nbsp;&nbsp;|&nbsp;&nbsp; Insight size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
-						&nbsp;&nbsp;|&nbsp;&nbsp; <label><input type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
-						&nbsp;&nbsp;|&nbsp;&nbsp; Last position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
-						<span id="divFirstClick" >Click to set position!</span>
-					</span>
-					<div id="info"></div> 
-				</td>
-			</tr>
-		</table>
+		<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.deltaY>0?1.25:0.8), 10);"
+		onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true; expectClick=true;"
+		onmouseout="isDragging=false; " 
+		onmouseup="isDragging=false; handleMouseClick(event);" 
+		onmousemove="handleMouseEvent(event);"
+		onclick="handleMouseClick(event);"
+
+		ontouchstart="var tevent=event.touches[0]; lastClientX=tevent.clientX; lastClientY=tevent.clientY; isDragging=true" 
+		ontouchend="isDragging=false" 
+		ontouchmove="handleMouseEvent(event.touches[0]);"
+		></canvas>
+
+		<span id="controls">
+			&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" oninput="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
+			&nbsp;&nbsp;|&nbsp;&nbsp; Insight size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
+			&nbsp;&nbsp;|&nbsp;&nbsp; <label><input type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
+			&nbsp;&nbsp;|&nbsp;&nbsp; Last position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
+			<span id="divFirstClick" >Click to set position!</span>
+		</span>
  
 		<script id="vs" type="x-shader/vertex"> 
  
