@@ -14,10 +14,6 @@
 				width: 100%;
 				height: 100%;
 			}
-			canvas {
-				width: 100%;
-				height: 100%;
-			}
             #controls{
  				white-space: nowrap;
 				font-weight: bold;
@@ -43,6 +39,10 @@
 				left: 0; 
 				width: 100%;
 				height: 100%;
+			}
+			#glview {
+				width: 100%;
+				height: 100% !important;
 			}
 		</style> 
 	</head> 
@@ -93,7 +93,7 @@
 		<table >
 			<tr >
 				<td >
-					<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.wheelDelta<0?1.25:0.8), 10);"
+					<canvas id="glview" onwheel="zoom=Math.min(zoom * (event.deltaY<0?1.25:0.8), 10);"
 					onmousedown="lastClientX=event.clientX; lastClientY=event.clientY; isDragging=true; expectClick=true;"
 					onmouseout="isDragging=false; " 
 					onmouseup="isDragging=false; handleMouseClick(event);" 
@@ -119,10 +119,6 @@
 				</td>
 			</tr>
 		</table>
-
-
-		
-        
  
 		<script id="vs" type="x-shader/vertex"> 
  
