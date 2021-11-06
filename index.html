@@ -97,8 +97,8 @@
 
 		<span id="controls">
 			&nbsp;&nbsp;&nbsp; Iterations <input id="sliderIterations" oninput="iterations=this.value*this.value;" type="range" min="2" max="33" value="10" step="1" ></input>
-			&nbsp;&nbsp;|&nbsp;&nbsp; Insight size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
-			&nbsp;&nbsp;|&nbsp;&nbsp; <label><input type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
+			&nbsp;&nbsp;|&nbsp;&nbsp; Julia size&nbsp; <input id="insightinput" oninput="onChangeInsight(this)" type="range" min="0" max="80" value="5" step="1" ></input>&nbsp;<output id="insightdisplay">5</output> 
+			&nbsp;&nbsp;|&nbsp;&nbsp; <label><input id="julia_cb" type='checkbox' onclick='onChangeJuliamap(this);'>Show Julia only</label>
 			&nbsp;&nbsp;|&nbsp;&nbsp; Last position: <span id="divPos" hidden=true> x= <span id="divFractalPosX" class="mousepos">0.0</span>&nbsp;&nbsp; y= <span class="mousepos" id="divFractalPosY">0.0</span></span>
 			<span id="divFirstClick" >Click to set position!</span>
 		</span>
@@ -126,49 +126,31 @@
 			uniform int iterations;
             uniform int fractalMode;
  
-            float GetMandelbrot(vec2 pos, float zoom, vec2 offset)
-            {
-                vec2 C = offset + pos*zoom;                
-                vec2 Zn=vec2(0.0, 0.0);
-
-                for( int i = 0; i < 1000; ++i)
-                {
-                    if (i >= iterations) break; //ugly hack as break; can't be used
-
-                    float x2 = Zn.x * Zn.x;
-                    float y2 = Zn.y * Zn.y;
-                    if (x2 + y2 > 4.0)
-                    { 
-                        return float(i+1) / float(iterations+1);
-                    } 
-                    
-                    Zn.y = (Zn.y * Zn.x * 2.0) + C.y; 
-                    Zn.x = (x2 - y2) + C.x; 
-                }
-                return 0.0;
-            }
-            
             float GetJulia(vec2 pos, float zoom, vec2 offset, vec2 juliaPos)
             {
                 vec2 C = juliaPos;                
-                vec2 Zn=offset + pos*zoom;
+                vec2 Zn = offset + pos * zoom;
 
                 for( int i = 0; i < 1000; ++i)
                 {
-                    if (i >= iterations) break; //ugly hack as break; can't be used
+                    if (i >= iterations) break; //workaround that dynamic iteration count can't be used
 
-                    float x2 = Zn.x * Zn.x;
-                    float y2 = Zn.y * Zn.y;
-                    if (x2 + y2 > 4.0)
+					vec2 xy2 = Zn * Zn;
+                    if (xy2.x + xy2.y > 4.0)
                     { 
                         return float(i+1) / float(iterations+1);
                     } 
                     
                     Zn.y = (Zn.y * Zn.x * 2.0) + C.y; 
-                    Zn.x = (x2 - y2) + C.x; 
+                    Zn.x = (xy2.x - xy2.y) + C.x; 
                 }
                 return 0.0;
             }
+
+            float GetMandelbrot(vec2 pos, float zoom, vec2 offset)
+            {
+				return GetJulia(vec2(0.0), 0.0, vec2(0.0), offset + pos * zoom);
+			}
 
 			void main( void ) {
                 float aspectRatio = resolution.x / resolution.y;
@@ -176,7 +158,6 @@
                 position.x *= aspectRatio;
 
                 //gl_FragColor = vec4( position.x*0.5+0.5, position.y*0.5+0.5, 0.0, 1.0 ); return;
-				gl_FragColor = vec4(0.0,0.0,0.0,0.0);
 
                 if ( fractalMode == 0 ) // mandelbrot
                 {
@@ -432,6 +413,35 @@
 			}
  
 		</script> 
- 
+		
+		<script>
+ 			const queryString = window.location.search;
+			const urlParams = new URLSearchParams(queryString);
+
+			if(urlParams.has('julia_mode'))
+			{
+				const is_julia_mode = urlParams.get('julia_mode') != 0;
+				let checkbox = document.getElementById("julia_cb");
+				checkbox.checked = is_julia_mode;
+				onChangeJuliamap(checkbox);
+			}
+			
+			if(urlParams.has('julia_size'))
+			{
+				const insightsize = parseInt(urlParams.get('julia_size'));
+				let slider = document.getElementById("insightinput");
+				slider.value = insightsize;
+				onChangeInsight(slider);
+			}
+			
+			if(urlParams.has('iterations'))
+			{
+				const iteration_count = parseInt(urlParams.get('iterations'));
+				let slider = document.getElementById("sliderIterations");
+				slider.value = iteration_count;
+				iterations = iteration_count*iteration_count;
+			}
+		</script>
+
 	</body> 
 </html>
